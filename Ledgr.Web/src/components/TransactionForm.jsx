@@ -27,7 +27,7 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
     try {
       const payload = {
         ...form,
-        amount: parseFloat(form.amount),
+        amount: parseFloat(form.amount.toString().replace(',', '.')),
         categoryId: form.categoryId || null,
         frequency: form.isRecurring ? parseInt(form.frequency) : null,
         nextOccurrence: form.isRecurring ? form.nextOccurrence : null,
@@ -52,7 +52,7 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
           <div className="flex flex-col sm:flex-row gap-2.5">
-            <input className={inputClass} type="number" step="0.01" min="0" placeholder="Amount *" value={form.amount} onChange={e => set('amount', e.target.value)} required />
+            <input className={inputClass} type="text" inputMode="decimal" placeholder="Amount *" value={form.amount} onChange={e => set('amount', e.target.value)} required />
             <select className={inputClass} value={form.type} onChange={e => set('type', e.target.value)}>
               <option value="expense">Expense</option>
               <option value="income">Income</option>
