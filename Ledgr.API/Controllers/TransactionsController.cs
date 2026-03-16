@@ -88,6 +88,66 @@ public class TransactionsController(AppDbContext db) : ControllerBase
         return Ok(t);
     }
 
+    [HttpGet("projections")]
+    public async Task<IActionResult> GetProjections([FromQuery] int year, [FromQuery] int month)
+    {
+        var today = DateTime.UtcNow.Date;
+        var endOfMonth = new DateTime(year, month, DateTime.DaysInMonth(year, month), 23, 59, 59, DateTimeKind.Utc);
+        var endOfYear = new DateTime(year, 12, 31, 23, 59, 59, DateTimeKind.Utc);
+
+        // Actual transactions so far this month/year
+        var monthTx = await db.Transactions
+            .Where(t => t.UserId == UserId && !t.IsRecurring && t.Date.Year == year && t.Date.Month == month)
+            .ToListAsync();
+        var yearTx = await db.Transactions
+            .Where(t => t.UserId == UserId && !t.IsRecurring && t.Date.Year == year)
+            .ToListAsync();
+
+        var templates = await db.Transactions
+            .Where(t => t.UserId == UserId && t.IsRecurring && t.NextOccurrence.HasValue)
+            .ToListAsync();
+
+        decimal projMonthIncome = monthTx.Where(t => t.Type == "income").Sum(t => t.Amount);
+        decimal projMonthExpenses = monthTx.Where(t => t.Type == "expense").Sum(t => t.Amount);
+        decimal projYearIncome = yearTx.Where(t => t.Type == "income").Sum(t => t.Amount);
+        decimal projYearExpenses = yearTx.Where(t => t.Type == "expense").Sum(t => t.Amount);
+
+        foreach (var tmpl in templates)
+        {
+            var next = tmpl.NextOccurrence!.Value;
+            while (next <= endOfYear)
+            {
+                if (next >= today)
+                {
+                    if (next <= endOfMonth)
+                    {
+                        if (tmpl.Type == "income") projMonthIncome += tmpl.Amount;
+                        else projMonthExpenses += tmpl.Amount;
+                    }
+                    if (next.Year == year)
+                    {
+                        if (tmpl.Type == "income") projYearIncome += tmpl.Amount;
+                        else projYearExpenses += tmpl.Amount;
+                    }
+                }
+                next = tmpl.Frequency switch
+                {
+                    RecurringFrequency.Daily   => next.AddDays(1),
+                    RecurringFrequency.Weekly  => next.AddDays(7),
+                    RecurringFrequency.Monthly => next.AddMonths(1),
+                    RecurringFrequency.Yearly  => next.AddYears(1),
+                    _ => endOfYear.AddDays(1)
+                };
+            }
+        }
+
+        return Ok(new
+        {
+            month = new { income = projMonthIncome, expenses = projMonthExpenses, balance = projMonthIncome - projMonthExpenses },
+            year  = new { income = projYearIncome,  expenses = projYearExpenses,  balance = projYearIncome  - projYearExpenses  }
+        });
+    }
+
     [HttpGet("templates")]
     public async Task<IActionResult> GetTemplates()
     {

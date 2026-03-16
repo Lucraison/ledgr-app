@@ -34,6 +34,7 @@ export const deleteUser = (id) => req('DELETE', `/api/admin/users/${id}`);
 export const resetPassword = (id, newPassword) => req('POST', `/api/admin/users/${id}/reset-password`, { newPassword });
 
 export const getTemplates = () => req('GET', '/api/transactions/templates');
+export const getProjections = (params = {}) => req('GET', '/api/transactions/projections?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))));
 export const stopRecurrence = (id) => req('POST', `/api/transactions/${id}/stop-recurrence`);
 
 export function parseToken() {
