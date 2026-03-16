@@ -9,7 +9,7 @@ namespace Ledgr.API.Controllers;
 [ApiController]
 [Route("api/admin")]
 [Authorize]
-public class AdminController(AppDbContext db) : ControllerBase
+public class AdminController(AppDbContext db, IConfiguration config) : ControllerBase
 {
     bool IsAdmin => User.FindFirst("isAdmin")?.Value == "True";
 
@@ -57,5 +57,20 @@ public class AdminController(AppDbContext db) : ControllerBase
         return Ok();
     }
 
+    [HttpPost("recover")]
+    [AllowAnonymous]
+    public async Task<IActionResult> RecoverAdmin(RecoverAdminRequest req)
+    {
+        var secret = config["AdminRecoverySecret"];
+        if (string.IsNullOrEmpty(secret) || req.Secret != secret)
+            return Unauthorized("Invalid secret.");
+        var admin = await db.Users.FirstOrDefaultAsync(u => u.IsAdmin);
+        if (admin is null) return NotFound("No admin account found.");
+        admin.PasswordHash = BCrypt.Net.BCrypt.HashPassword(req.NewPassword);
+        await db.SaveChangesAsync();
+        return Ok("Admin password reset.");
+    }
+
     public record ResetPasswordRequest(string NewPassword);
+    public record RecoverAdminRequest(string Secret, string NewPassword);
 }
