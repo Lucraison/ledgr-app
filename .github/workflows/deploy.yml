@@ -1,0 +1,50 @@
+name: Deploy Ledgr
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build frontend
+        working-directory: Ledgr.Web
+        run: |
+          npm install --legacy-peer-deps
+          npm run build
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Publish API
+        working-directory: Ledgr.API
+        run: dotnet publish -c Release -r linux-x64 --self-contained false -o publish
+
+      - name: Deploy to server
+        env:
+          SSH_KEY: ${{ secrets.SERVER_SSH_KEY }}
+        run: |
+          echo "$SSH_KEY" > key.pem
+          chmod 600 key.pem
+
+          # Deploy frontend
+          scp -i key.pem -o StrictHostKeyChecking=no -r Ledgr.Web/dist/* root@46.225.231.156:/var/www/ledgr-web/
+
+          # Deploy API
+          scp -i key.pem -o StrictHostKeyChecking=no -r Ledgr.API/publish/* root@46.225.231.156:/var/www/ledgr-api/
+
+          # Restart API service
+          ssh -i key.pem -o StrictHostKeyChecking=no root@46.225.231.156 "systemctl restart ledgr-api"
+
+          rm key.pem
