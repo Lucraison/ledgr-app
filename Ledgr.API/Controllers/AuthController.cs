@@ -15,7 +15,7 @@ public class AuthController(AppDbContext db, TokenService tokens) : ControllerBa
     [HttpPost("register")]
     public async Task<IActionResult> Register(AuthRequest req)
     {
-        if (await db.Users.AnyAsync(u => u.Username == req.Username))
+        if (await db.Users.AnyAsync(u => u.Username.ToLower() == req.Username.ToLower()))
             return BadRequest("Username already taken.");
 
         var isFirstUser = !await db.Users.AnyAsync();
@@ -43,7 +43,7 @@ public class AuthController(AppDbContext db, TokenService tokens) : ControllerBa
     [HttpPost("login")]
     public async Task<IActionResult> Login(AuthRequest req)
     {
-        var user = await db.Users.FirstOrDefaultAsync(u => u.Username == req.Username);
+        var user = await db.Users.FirstOrDefaultAsync(u => u.Username.ToLower() == req.Username.ToLower());
         if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
             return Unauthorized("Invalid credentials.");
         return Ok(new { token = tokens.Generate(user) });
