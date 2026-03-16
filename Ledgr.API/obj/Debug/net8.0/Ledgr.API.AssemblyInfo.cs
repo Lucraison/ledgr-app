@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Ledgr.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b542c28a9819eb79fa3df5cf0e8f9eee3c5564aa")]
 [assembly: System.Reflection.AssemblyProductAttribute("Ledgr.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Ledgr.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

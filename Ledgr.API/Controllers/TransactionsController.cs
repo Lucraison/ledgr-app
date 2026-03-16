@@ -54,7 +54,12 @@ public class TransactionsController(AppDbContext db) : ControllerBase
             Date = DateTime.SpecifyKind(req.Date ?? DateTime.UtcNow, DateTimeKind.Utc),
             Notes = req.Notes,
             CategoryId = req.CategoryId,
-            UserId = UserId
+            UserId = UserId,
+            IsRecurring = req.IsRecurring,
+            Frequency = req.IsRecurring ? req.Frequency : null,
+            NextOccurrence = req.IsRecurring && req.NextOccurrence.HasValue
+                ? DateTime.SpecifyKind(req.NextOccurrence.Value, DateTimeKind.Utc)
+                : null
         };
         db.Transactions.Add(t);
         await db.SaveChangesAsync();
@@ -73,8 +78,36 @@ public class TransactionsController(AppDbContext db) : ControllerBase
         t.Date = DateTime.SpecifyKind(req.Date ?? t.Date, DateTimeKind.Utc);
         t.Notes = req.Notes;
         t.CategoryId = req.CategoryId;
+        t.IsRecurring = req.IsRecurring;
+        t.Frequency = req.IsRecurring ? req.Frequency : null;
+        t.NextOccurrence = req.IsRecurring && req.NextOccurrence.HasValue
+            ? DateTime.SpecifyKind(req.NextOccurrence.Value, DateTimeKind.Utc)
+            : null;
         await db.SaveChangesAsync();
         await db.Entry(t).Reference(x => x.Category).LoadAsync();
+        return Ok(t);
+    }
+
+    [HttpGet("templates")]
+    public async Task<IActionResult> GetTemplates()
+    {
+        var templates = await db.Transactions
+            .Include(t => t.Category)
+            .Where(t => t.UserId == UserId && t.IsRecurring)
+            .OrderBy(t => t.NextOccurrence)
+            .ToListAsync();
+        return Ok(templates);
+    }
+
+    [HttpPost("{id}/stop-recurrence")]
+    public async Task<IActionResult> StopRecurrence(int id)
+    {
+        var t = await db.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == UserId);
+        if (t is null) return NotFound();
+        t.IsRecurring = false;
+        t.Frequency = null;
+        t.NextOccurrence = null;
+        await db.SaveChangesAsync();
         return Ok(t);
     }
 
@@ -88,5 +121,5 @@ public class TransactionsController(AppDbContext db) : ControllerBase
         return NoContent();
     }
 
-    public record TransactionRequest(decimal Amount, string Type, string Description, DateTime? Date, string? Notes, int? CategoryId);
+    public record TransactionRequest(decimal Amount, string Type, string Description, DateTime? Date, string? Notes, int? CategoryId, bool IsRecurring = false, RecurringFrequency? Frequency = null, DateTime? NextOccurrence = null);
 }

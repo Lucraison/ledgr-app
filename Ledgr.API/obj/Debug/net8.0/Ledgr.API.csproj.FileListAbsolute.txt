@@ -117,3 +117,9 @@ C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\obj\Debug\net8.0\refint\Ledgr.
 C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\obj\Debug\net8.0\Ledgr.API.pdb
 C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\obj\Debug\net8.0\Ledgr.API.genruntimeconfig.cache
 C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\obj\Debug\net8.0\ref\Ledgr.API.dll
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\bin\Debug\net8.0\publish\appsettings.Development.json
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\bin\Debug\net8.0\publish\appsettings.json
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\bin\Debug\net8.0\publish\Ledgr.API.deps.json
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\bin\Debug\net8.0\publish\Ledgr.API.runtimeconfig.json
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\bin\Debug\net8.0\publish\Ledgr.API.staticwebassets.endpoints.json
+C:\Users\nicol\Documents\Projetos\Ledgr\Ledgr.API\obj\Debug\net8.0\Ledgr.API.sourcelink.json

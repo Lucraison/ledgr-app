@@ -7,6 +7,7 @@ export default function AdminPage({ onBack, onLogout }) {
   const [newPassword, setNewPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [search, setSearch] = useState('');
 
   async function load() {
     const data = await getUsers();
@@ -35,6 +36,9 @@ export default function AdminPage({ onBack, onLogout }) {
     }
   }
 
+  const admins = users.filter(u => u.isAdmin);
+  const regular = users.filter(u => !u.isAdmin && u.username.toLowerCase().includes(search.toLowerCase()));
+
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
       <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
@@ -52,20 +56,40 @@ export default function AdminPage({ onBack, onLogout }) {
         </div>
       </header>
 
-      <div className="px-4 sm:px-8 py-8">
-        <h2 className="text-xl font-semibold mb-6">Users</h2>
+      <div className="px-4 sm:px-8 py-8 flex flex-col gap-8">
 
-        {success && <p className="text-green-400 text-sm mb-4">{success}</p>}
+        <div>
+          <h2 className="text-xs font-semibold uppercase tracking-wide text-[#555] mb-3">Administrators</h2>
+          <div className="flex flex-col gap-2">
+            {admins.map(u => (
+              <div key={u.id} className="bg-[#1a1a1a] border border-indigo-500/20 rounded-xl px-4 py-3 flex items-center gap-2">
+                <span className="font-semibold">{u.username}</span>
+                <span className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">admin</span>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <div className="flex flex-col gap-3">
-          {users.map(u => (
-            <div key={u.id} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg font-semibold">{u.username}</span>
-                  {u.isAdmin && <span className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">admin</span>}
-                </div>
-                {!u.isAdmin && (
+        <div>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-[#555]">Users</h2>
+            <span className="text-xs text-[#555]">{regular.length} result{regular.length !== 1 ? 's' : ''}</span>
+          </div>
+          <input
+            className="w-full px-3.5 py-2.5 rounded-lg border border-[#333] bg-[#111] text-white text-sm outline-none focus:border-indigo-500 mb-3"
+            placeholder="Search users..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+          />
+
+          {success && <p className="text-green-400 text-sm mb-3">{success}</p>}
+
+          <div className="flex flex-col gap-2">
+            {regular.length === 0 && <p className="text-[#555] text-sm text-center py-4">No users found.</p>}
+            {regular.map(u => (
+              <div key={u.id} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <span className="text-base font-semibold">{u.username}</span>
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setResetingId(u.id); setNewPassword(''); setError(''); setSuccess(''); }}
@@ -80,30 +104,31 @@ export default function AdminPage({ onBack, onLogout }) {
                       Delete
                     </button>
                   </div>
-                )}
-              </div>
+                </div>
 
-              {resetingId === u.id && (
-                <form onSubmit={handleReset} className="mt-3 flex flex-col sm:flex-row gap-2">
-                  <input
-                    className="flex-1 px-3 py-2 rounded-lg border border-[#333] bg-[#111] text-white text-sm outline-none focus:border-indigo-500"
-                    type="text" placeholder="New temporary password *"
-                    value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6}
-                  />
-                  <div className="flex gap-2">
-                    <button type="submit" className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold cursor-pointer hover:bg-indigo-600 transition-colors">
-                      Set
-                    </button>
-                    <button type="button" onClick={() => setResetingId(null)} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm bg-transparent cursor-pointer hover:text-white transition-colors">
-                      Cancel
-                    </button>
-                  </div>
-                </form>
-              )}
-              {resetingId === u.id && error && <p className="text-red-400 text-xs mt-2">{error}</p>}
-            </div>
-          ))}
+                {resetingId === u.id && (
+                  <form onSubmit={handleReset} className="mt-3 flex flex-col sm:flex-row gap-2">
+                    <input
+                      className="flex-1 px-3 py-2 rounded-lg border border-[#333] bg-[#111] text-white text-sm outline-none focus:border-indigo-500"
+                      type="text" placeholder="New temporary password *"
+                      value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength={6}
+                    />
+                    <div className="flex gap-2">
+                      <button type="submit" className="flex-1 sm:flex-none px-4 py-2 rounded-lg bg-indigo-500 text-white text-sm font-semibold cursor-pointer hover:bg-indigo-600 transition-colors">
+                        Set
+                      </button>
+                      <button type="button" onClick={() => setResetingId(null)} className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-[#333] text-[#aaa] text-sm bg-transparent cursor-pointer hover:text-white transition-colors">
+                        Cancel
+                      </button>
+                    </div>
+                  </form>
+                )}
+                {resetingId === u.id && error && <p className="text-red-400 text-xs mt-2">{error}</p>}
+              </div>
+            ))}
+          </div>
         </div>
+
       </div>
     </div>
   );

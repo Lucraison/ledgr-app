@@ -9,6 +9,11 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
     date: initial?.date ? initial.date.slice(0, 10) : new Date().toISOString().slice(0, 10),
     notes: initial?.notes ?? '',
     categoryId: initial?.categoryId ?? '',
+    isRecurring: initial?.isRecurring ?? false,
+    frequency: initial?.frequency ?? 2,
+    nextOccurrence: initial?.nextOccurrence
+      ? initial.nextOccurrence.slice(0, 10)
+      : new Date().toISOString().slice(0, 10),
   });
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
@@ -20,7 +25,13 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
     setError('');
     setSaving(true);
     try {
-      const payload = { ...form, amount: parseFloat(form.amount), categoryId: form.categoryId || null };
+      const payload = {
+        ...form,
+        amount: parseFloat(form.amount),
+        categoryId: form.categoryId || null,
+        frequency: form.isRecurring ? parseInt(form.frequency) : null,
+        nextOccurrence: form.isRecurring ? form.nextOccurrence : null,
+      };
       if (initial?.id) await updateTransaction(initial.id, payload);
       else await createTransaction(payload);
       onSave();
@@ -54,6 +65,37 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
           <textarea className={`${inputClass} resize-y min-h-[70px]`} placeholder="Notes" value={form.notes} onChange={e => set('notes', e.target.value)} />
+
+          <label className="flex items-center gap-2 text-sm text-[#aaa] cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={form.isRecurring}
+              onChange={e => set('isRecurring', e.target.checked)}
+              className="w-4 h-4 accent-indigo-500"
+            />
+            Recurring transaction
+          </label>
+
+          {form.isRecurring && (
+            <div className="flex flex-col gap-2.5 bg-[#111] border border-[#2a2a2a] rounded-lg p-3">
+              <div className="flex gap-2.5">
+                <div className="flex-1">
+                  <label className="text-xs text-[#555] uppercase tracking-wide block mb-1">Frequency</label>
+                  <select className={inputClass} value={form.frequency} onChange={e => set('frequency', e.target.value)}>
+                    <option value={0}>Daily</option>
+                    <option value={1}>Weekly</option>
+                    <option value={2}>Monthly</option>
+                    <option value={3}>Yearly</option>
+                  </select>
+                </div>
+                <div className="flex-1">
+                  <label className="text-xs text-[#555] uppercase tracking-wide block mb-1">First occurrence</label>
+                  <input className={inputClass} type="date" value={form.nextOccurrence} onChange={e => set('nextOccurrence', e.target.value)} />
+                </div>
+              </div>
+            </div>
+          )}
+
           {error && <p className="text-red-400 text-xs m-0">{error}</p>}
           <div className="flex gap-3 justify-end mt-2">
             <button type="button" className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border border-[#333] bg-transparent text-[#aaa] cursor-pointer hover:border-[#555] hover:text-white transition-colors" onClick={onCancel}>

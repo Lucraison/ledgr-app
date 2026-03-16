@@ -4,6 +4,7 @@ import TransactionForm from '../components/TransactionForm';
 import CategoryManager from '../components/CategoryManager';
 import ChangePassword from '../components/ChangePassword';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Label } from 'recharts';
+import RecurringManager from '../components/RecurringManager';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
@@ -19,6 +20,7 @@ export default function Dashboard({ onLogout, onAdmin }) {
   const [showForm, setShowForm] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showRecurring, setShowRecurring] = useState(false);
   const [filterType, setFilterType] = useState('');
 
   async function load() {
@@ -90,6 +92,12 @@ export default function Dashboard({ onLogout, onAdmin }) {
         </select>
         <button
           className="ml-auto px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
+          onClick={() => setShowRecurring(true)}
+        >
+          Recurring
+        </button>
+        <button
+          className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
           onClick={() => setShowCategories(true)}
         >
           Categories
@@ -150,7 +158,10 @@ export default function Dashboard({ onLogout, onAdmin }) {
               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tx.category?.color ?? '#555' }} />
               <div className="min-w-0">
                 <div className="text-sm font-medium truncate">{tx.description}</div>
-                <div className="text-xs text-[#666] mt-0.5 truncate">{tx.category?.name ?? 'Uncategorized'} · {new Date(tx.date).toLocaleDateString()}</div>
+                <div className="text-xs text-[#666] mt-0.5 truncate">
+                  {tx.category?.name ?? 'Uncategorized'} · {new Date(tx.date).toLocaleDateString()}
+                  {tx.parentTransactionId && <span className="ml-1 text-indigo-400">↺</span>}
+                </div>
               </div>
             </div>
             <div className="flex items-center gap-1 shrink-0">
@@ -182,6 +193,13 @@ export default function Dashboard({ onLogout, onAdmin }) {
       )}
 
       {showChangePassword && <ChangePassword onClose={() => setShowChangePassword(false)} />}
+
+      {showRecurring && (
+        <RecurringManager
+          onClose={() => setShowRecurring(false)}
+          onEdit={tx => { setEditing(tx); setShowForm(true); }}
+        />
+      )}
     </div>
   );
 }

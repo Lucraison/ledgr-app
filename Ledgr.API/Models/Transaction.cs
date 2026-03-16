@@ -12,4 +12,8 @@ public class Transaction
     public User User { get; set; } = null!;
     public int? CategoryId { get; set; }
     public Category? Category { get; set; }
+    public bool IsRecurring { get; set; } = false;
+    public RecurringFrequency? Frequency { get; set; }
+    public DateTime? NextOccurrence { get; set; }
+    public int? ParentTransactionId { get; set; }
 }
