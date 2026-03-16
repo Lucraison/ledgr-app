@@ -1,0 +1,92 @@
+using System.Security.Claims;
+using Ledgr.API.Data;
+using Ledgr.API.Models;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace Ledgr.API.Controllers;
+
+[ApiController]
+[Route("api/transactions")]
+[Authorize]
+public class TransactionsController(AppDbContext db) : ControllerBase
+{
+    int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll([FromQuery] int? year, [FromQuery] int? month, [FromQuery] int? categoryId)
+    {
+        var query = db.Transactions
+            .Include(t => t.Category)
+            .Where(t => t.UserId == UserId);
+
+        if (year.HasValue) query = query.Where(t => t.Date.Year == year.Value);
+        if (month.HasValue) query = query.Where(t => t.Date.Month == month.Value);
+        if (categoryId.HasValue) query = query.Where(t => t.CategoryId == categoryId.Value);
+
+        var results = await query.OrderByDescending(t => t.Date).ToListAsync();
+        return Ok(results);
+    }
+
+    [HttpGet("summary")]
+    public async Task<IActionResult> GetSummary([FromQuery] int? year, [FromQuery] int? month)
+    {
+        var query = db.Transactions.Where(t => t.UserId == UserId);
+        if (year.HasValue) query = query.Where(t => t.Date.Year == year.Value);
+        if (month.HasValue) query = query.Where(t => t.Date.Month == month.Value);
+
+        var transactions = await query.ToListAsync();
+        var income = transactions.Where(t => t.Type == "income").Sum(t => t.Amount);
+        var expenses = transactions.Where(t => t.Type == "expense").Sum(t => t.Amount);
+
+        return Ok(new { income, expenses, balance = income - expenses });
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(TransactionRequest req)
+    {
+        var t = new Transaction
+        {
+            Amount = req.Amount,
+            Type = req.Type,
+            Description = req.Description,
+            Date = DateTime.SpecifyKind(req.Date ?? DateTime.UtcNow, DateTimeKind.Utc),
+            Notes = req.Notes,
+            CategoryId = req.CategoryId,
+            UserId = UserId
+        };
+        db.Transactions.Add(t);
+        await db.SaveChangesAsync();
+        await db.Entry(t).Reference(x => x.Category).LoadAsync();
+        return Ok(t);
+    }
+
+    [HttpPut("{id}")]
+    public async Task<IActionResult> Update(int id, TransactionRequest req)
+    {
+        var t = await db.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == UserId);
+        if (t is null) return NotFound();
+        t.Amount = req.Amount;
+        t.Type = req.Type;
+        t.Description = req.Description;
+        t.Date = DateTime.SpecifyKind(req.Date ?? t.Date, DateTimeKind.Utc);
+        t.Notes = req.Notes;
+        t.CategoryId = req.CategoryId;
+        await db.SaveChangesAsync();
+        await db.Entry(t).Reference(x => x.Category).LoadAsync();
+        return Ok(t);
+    }
+
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        var t = await db.Transactions.FirstOrDefaultAsync(t => t.Id == id && t.UserId == UserId);
+        if (t is null) return NotFound();
+        db.Transactions.Remove(t);
+        await db.SaveChangesAsync();
+        return NoContent();
+    }
+
+    public record TransactionRequest(decimal Amount, string Type, string Description, DateTime? Date, string? Notes, int? CategoryId);
+}
