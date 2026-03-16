@@ -60,7 +60,7 @@ export default function AdminPage({ onBack, onLogout }) {
         <div className="flex flex-col gap-3">
           {users.map(u => (
             <div key={u.id} className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-4 sm:p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                 <div className="flex items-center gap-2">
                   <span className="text-lg font-semibold">{u.username}</span>
                   {u.isAdmin && <span className="text-sm bg-indigo-500/20 text-indigo-400 px-3 py-1 rounded-full">admin</span>}
@@ -69,13 +69,13 @@ export default function AdminPage({ onBack, onLogout }) {
                   <div className="flex gap-2">
                     <button
                       onClick={() => { setResetingId(u.id); setNewPassword(''); setError(''); setSuccess(''); }}
-                      className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
                     >
                       Reset password
                     </button>
                     <button
                       onClick={() => handleDelete(u.id)}
-                      className="px-4 py-2 rounded-lg border border-red-900 text-red-400 bg-transparent cursor-pointer hover:bg-red-900/20 transition-colors text-sm"
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-lg border border-red-900 text-red-400 bg-transparent cursor-pointer hover:bg-red-900/20 transition-colors text-sm"
                     >
                       Delete
                     </button>
