@@ -58,24 +58,24 @@ export default function Dashboard({ onLogout, onAdmin }) {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-[#1e1e1e]">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
         <span className="text-xl font-bold text-indigo-500">Ledgr</span>
         <div className="flex gap-2">
           {isAdmin === 'True' && (
-            <button onClick={onAdmin} className="border border-[#333] text-[#aaa] rounded-lg px-4 py-1.5 cursor-pointer text-sm bg-transparent hover:border-indigo-500 hover:text-indigo-400 transition-colors">
+            <button onClick={onAdmin} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-indigo-500 hover:text-indigo-400 transition-colors">
               Admin
             </button>
           )}
-          <button onClick={() => setShowChangePassword(true)} className="border border-[#333] text-[#aaa] rounded-lg px-4 py-1.5 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
+          <button onClick={() => setShowChangePassword(true)} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
             Password
           </button>
-          <button onClick={onLogout} className="border border-[#333] text-[#aaa] rounded-lg px-4 py-1.5 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
+          <button onClick={onLogout} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
             Logout
           </button>
         </div>
       </header>
 
-      <div className="flex gap-3 px-6 py-4 items-center">
+      <div className="flex flex-wrap gap-3 px-4 sm:px-6 py-4 items-center">
         <select
           className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer"
           value={month} onChange={e => setMonth(+e.target.value)}
@@ -102,8 +102,8 @@ export default function Dashboard({ onLogout, onAdmin }) {
         </button>
       </div>
 
-      <div className="flex gap-4 px-6 pb-4 items-stretch">
-        <div className="flex flex-col gap-3 flex-1">
+      <div className="flex flex-col sm:flex-row gap-4 px-4 sm:px-6 pb-4">
+        <div className="flex flex-col gap-3 sm:flex-1">
           {[
             { name: 'Income', value: summary.income, color: '#22c55e' },
             { name: 'Expenses', value: summary.expenses, color: '#f87171' },
@@ -122,7 +122,7 @@ export default function Dashboard({ onLogout, onAdmin }) {
         </div>
 
         {chartData.length > 0 ? (
-          <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex flex-col items-center justify-center py-2">
+          <div className="sm:flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex flex-col items-center justify-center py-2">
             <ResponsiveContainer width="100%" height={180}>
               <PieChart>
                 <Pie data={chartData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={50} outerRadius={75} stroke="none">
@@ -136,29 +136,29 @@ export default function Dashboard({ onLogout, onAdmin }) {
             <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-2">Expenses by category</p>
           </div>
         ) : (
-          <div className="flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex items-center justify-center">
+          <div className="sm:flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex items-center justify-center min-h-[100px]">
             <p className="text-xs text-[#444] uppercase tracking-wide font-semibold">No expenses yet</p>
           </div>
         )}
       </div>
 
-      <div className="px-6 pb-8 flex flex-col gap-2">
+      <div className="px-4 sm:px-6 pb-8 flex flex-col gap-2">
         {filtered.length === 0 && <p className="text-[#555] text-center mt-8">No transactions this month.</p>}
         {filtered.map(tx => (
-          <div key={tx.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-4 py-3 border border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors">
-            <div className="flex items-center gap-3">
+          <div key={tx.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-4 py-3 border border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors gap-2">
+            <div className="flex items-center gap-3 min-w-0">
               <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tx.category?.color ?? '#555' }} />
-              <div>
-                <div className="text-sm font-medium">{tx.description}</div>
-                <div className="text-xs text-[#666] mt-0.5">{tx.category?.name ?? 'Uncategorized'} · {new Date(tx.date).toLocaleDateString()}</div>
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate">{tx.description}</div>
+                <div className="text-xs text-[#666] mt-0.5 truncate">{tx.category?.name ?? 'Uncategorized'} · {new Date(tx.date).toLocaleDateString()}</div>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-sm mr-2" style={{ color: tx.type === 'income' ? '#22c55e' : '#f87171' }}>
+            <div className="flex items-center gap-1 shrink-0">
+              <span className="font-bold text-sm mr-1" style={{ color: tx.type === 'income' ? '#22c55e' : '#f87171' }}>
                 {tx.type === 'income' ? '+' : '-'}€{tx.amount.toFixed(2)}
               </span>
-              <button className="bg-transparent border-none cursor-pointer p-1 text-[#555] hover:text-white transition-colors" onClick={() => handleEdit(tx)}>✏️</button>
-              <button className="bg-transparent border-none cursor-pointer p-1 text-[#555] hover:text-white transition-colors" onClick={() => handleDelete(tx.id)}>🗑️</button>
+              <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleEdit(tx)}>✏️</button>
+              <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleDelete(tx.id)}>🗑️</button>
             </div>
           </div>
         ))}

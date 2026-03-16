@@ -23,11 +23,11 @@ export default function ChangePassword({ onClose }) {
   }
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-8 w-full max-w-sm mx-4">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 sm:p-8 w-full max-w-sm">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-lg font-semibold text-white m-0">Change Password</h2>
-          <button className="bg-transparent border-none text-[#555] cursor-pointer hover:text-white text-2xl leading-none" onClick={onClose}>×</button>
+          <button className="bg-transparent border-none text-[#555] cursor-pointer hover:text-white text-2xl leading-none p-1" onClick={onClose}>×</button>
         </div>
 
         {success ? (
@@ -51,7 +51,7 @@ export default function ChangePassword({ onClose }) {
             />
             {error && <p className="text-red-400 text-xs m-0">{error}</p>}
             <div className="flex gap-3 mt-1">
-              <button type="button" onClick={onClose} className="w-28 py-2.5 rounded-lg border border-[#555] bg-transparent text-white cursor-pointer text-sm hover:bg-[#2a2a2a] transition-colors">
+              <button type="button" onClick={onClose} className="flex-1 py-2.5 rounded-lg border border-[#555] bg-transparent text-white cursor-pointer text-sm hover:bg-[#2a2a2a] transition-colors">
                 Cancel
               </button>
               <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer text-sm hover:bg-indigo-600 transition-colors disabled:opacity-70">

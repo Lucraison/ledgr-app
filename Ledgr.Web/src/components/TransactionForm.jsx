@@ -34,13 +34,13 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
   const inputClass = "px-3.5 py-2.5 rounded-lg border border-[#333] bg-[#111] text-white text-sm w-full outline-none focus:border-indigo-500";
 
   return (
-    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50">
-      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6 w-full max-w-md mx-4">
+    <div className="fixed inset-0 bg-black/75 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-5 w-full max-w-md">
         <h2 className="text-lg font-semibold text-white mb-4 mt-0">
           {initial?.id ? 'Edit Transaction' : 'Add Transaction'}
         </h2>
         <form onSubmit={handleSubmit} className="flex flex-col gap-2.5">
-          <div className="flex gap-2.5">
+          <div className="flex flex-col sm:flex-row gap-2.5">
             <input className={inputClass} type="number" step="0.01" min="0" placeholder="Amount *" value={form.amount} onChange={e => set('amount', e.target.value)} required />
             <select className={inputClass} value={form.type} onChange={e => set('type', e.target.value)}>
               <option value="expense">Expense</option>
@@ -56,10 +56,10 @@ export default function TransactionForm({ initial, categories, onSave, onCancel 
           <textarea className={`${inputClass} resize-y min-h-[70px]`} placeholder="Notes" value={form.notes} onChange={e => set('notes', e.target.value)} />
           {error && <p className="text-red-400 text-xs m-0">{error}</p>}
           <div className="flex gap-3 justify-end mt-2">
-            <button type="button" className="px-4 py-2 rounded-lg border border-[#333] bg-transparent text-[#aaa] cursor-pointer hover:border-[#555] hover:text-white transition-colors" onClick={onCancel}>
+            <button type="button" className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border border-[#333] bg-transparent text-[#aaa] cursor-pointer hover:border-[#555] hover:text-white transition-colors" onClick={onCancel}>
               Cancel
             </button>
-            <button type="submit" disabled={saving} className="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer hover:bg-indigo-600 transition-colors disabled:opacity-70">
+            <button type="submit" disabled={saving} className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer hover:bg-indigo-600 transition-colors disabled:opacity-70">
               {saving ? '...' : initial?.id ? 'Save Changes' : 'Add'}
             </button>
           </div>
