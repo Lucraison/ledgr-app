@@ -10,7 +10,8 @@ async function req(method, path, body) {
   });
   if (!res.ok) throw new Error(await res.text());
   if (res.status === 204) return null;
-  return res.json();
+  const text = await res.text();
+  return text ? JSON.parse(text) : null;
 }
 
 export const register = (username, password) => req('POST', '/api/auth/register', { username, password });
