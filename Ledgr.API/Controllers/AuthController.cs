@@ -10,7 +10,14 @@ namespace Ledgr.API.Controllers;
 [Route("api/auth")]
 public class AuthController(AppDbContext db, TokenService tokens) : ControllerBase
 {
-    public record AuthRequest(string Username, string Password);
+    public record AuthRequest(string Username, string Password, string Language = "en");
+
+    static readonly Dictionary<string, string[]> CategoryNames = new()
+    {
+        ["en"] = ["Salary", "Food", "Transport", "Entertainment", "Health"],
+        ["es"] = ["Salario", "Comida", "Transporte", "Entretenimiento", "Salud"],
+        ["fr"] = ["Salaire", "Nourriture", "Transport", "Divertissement", "Santé"],
+    };
 
     [HttpPost("register")]
     public async Task<IActionResult> Register(AuthRequest req)
@@ -28,13 +35,10 @@ public class AuthController(AppDbContext db, TokenService tokens) : ControllerBa
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        db.Categories.AddRange(
-            new Category { Name = "Salary",        Color = "#22c55e", UserId = user.Id },
-            new Category { Name = "Food",          Color = "#f97316", UserId = user.Id },
-            new Category { Name = "Transport",     Color = "#3b82f6", UserId = user.Id },
-            new Category { Name = "Entertainment", Color = "#a855f7", UserId = user.Id },
-            new Category { Name = "Health",        Color = "#f43f5e", UserId = user.Id }
-        );
+        var lang = CategoryNames.ContainsKey(req.Language) ? req.Language : "en";
+        var names = CategoryNames[lang];
+        var colors = new[] { "#22c55e", "#f97316", "#3b82f6", "#a855f7", "#f43f5e" };
+        db.Categories.AddRange(names.Select((name, i) => new Category { Name = name, Color = colors[i], UserId = user.Id }));
         await db.SaveChangesAsync();
 
         return Ok(new { token = tokens.Generate(user) });

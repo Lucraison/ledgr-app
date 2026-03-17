@@ -14,10 +14,10 @@ async function req(method, path, body) {
   return text ? JSON.parse(text) : null;
 }
 
-export const register = (username, password) => req('POST', '/api/auth/register', { username, password });
+export const register = (username, password, language = 'en') => req('POST', '/api/auth/register', { username, password, language });
 export const login = (username, password) => req('POST', '/api/auth/login', { username, password });
 
-export const getTransactions = (params = {}) => req('GET', '/api/transactions?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))));
+export const getTransactions = (params = {}) => req('GET', '/api/transactions?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v != null && v !== ''))));
 export const getSummary = (params = {}) => req('GET', '/api/transactions/summary?' + new URLSearchParams(Object.fromEntries(Object.entries(params).filter(([, v]) => v != null))));
 export const createTransaction = (data) => req('POST', '/api/transactions', data);
 export const updateTransaction = (id, data) => req('PUT', `/api/transactions/${id}`, data);

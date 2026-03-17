@@ -1,15 +1,16 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { getTransactions, getSummary, deleteTransaction, getCategories, parseToken, getProjections } from '../api';
 import TransactionForm from '../components/TransactionForm';
 import CategoryManager from '../components/CategoryManager';
-import ChangePassword from '../components/ChangePassword';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Label } from 'recharts';
 import RecurringManager from '../components/RecurringManager';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmt = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function Dashboard({ onLogout, onAdmin }) {
+export default function Dashboard({ onLogout, onAdmin, onProfile }) {
+  const { t, i18n } = useTranslation();
   const { isAdmin } = parseToken();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -20,47 +21,66 @@ export default function Dashboard({ onLogout, onAdmin }) {
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
-  const [showChangePassword, setShowChangePassword] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [projections, setProjections] = useState(null);
   const [filterType, setFilterType] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [total, setTotal] = useState(0);
+  const PAGE_SIZE = 20;
 
-  async function load() {
-    const [txs, sum, cats, proj] = await Promise.all([
-      getTransactions({ year, month }),
+  useEffect(() => {
+    const timer = setTimeout(() => setSearch(searchInput), 300);
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  async function load(p = page) {
+    const [txRes, sum, cats, proj] = await Promise.all([
+      getTransactions({ year, month, search: search || undefined, type: filterType || undefined, page: p, pageSize: PAGE_SIZE }),
       getSummary({ year, month }),
       getCategories(),
       getProjections({ year, month }),
     ]);
-    setTransactions(txs);
+    const items = Array.isArray(txRes) ? txRes : (txRes?.items ?? []);
+    const totalCount = Array.isArray(txRes) ? txRes.length : (txRes?.total ?? 0);
+    setTransactions(items);
+    setTotal(totalCount);
     setSummary(sum);
     setCategories(cats);
     setProjections(proj);
   }
 
-  useEffect(() => { load(); }, [year, month]);
+  useEffect(() => { setPage(1); load(1); }, [year, month]);
+  useEffect(() => { setPage(1); load(1); }, [search, filterType]);
 
   function handleEdit(tx) { setEditing(tx); setShowForm(true); }
   function handleAdd() { setEditing(null); setShowForm(true); }
   async function handleDelete(id) {
-    if (!confirm('Delete this transaction?')) return;
+    if (!confirm(t('deleteTransaction'))) return;
     await deleteTransaction(id);
     load();
   }
 
-  const filtered = filterType ? transactions.filter(t => t.type === filterType) : transactions;
+  const totalPages = Math.ceil(total / PAGE_SIZE);
 
   const chartData = Object.values(
     transactions
-      .filter(t => t.type === 'expense')
-      .reduce((acc, t) => {
-        const name = t.category?.name ?? 'Uncategorized';
-        const color = t.category?.color ?? '#555';
+      .filter(tx => tx.type === 'expense')
+      .reduce((acc, tx) => {
+        const name = tx.category?.name ?? t('uncategorized');
+        const color = tx.category?.color ?? '#555';
         if (!acc[name]) acc[name] = { name, value: 0, color };
-        acc[name].value += t.amount;
+        acc[name].value += tx.amount;
         return acc;
       }, {})
   );
+
+  const summaryCards = [
+    { key: 'income',   label: t('income'),   value: summary.income,   color: '#22c55e' },
+    { key: 'expenses', label: t('expenses'),  value: summary.expenses, color: '#f87171' },
+    { key: 'balance',  label: t('balance'),   value: summary.balance,  color: '#6366f1' },
+  ];
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
@@ -69,89 +89,70 @@ export default function Dashboard({ onLogout, onAdmin }) {
         <div className="flex gap-2">
           {isAdmin === 'True' && (
             <button onClick={onAdmin} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-indigo-500 hover:text-indigo-400 transition-colors">
-              Admin
+              {t('admin')}
             </button>
           )}
-          <button onClick={() => setShowChangePassword(true)} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            Password
+          <button onClick={onProfile} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
+            Profile
           </button>
           <button onClick={onLogout} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            Logout
+            {t('logout')}
           </button>
         </div>
       </header>
 
       <div className="flex flex-wrap gap-3 px-4 sm:px-6 py-4 items-center">
-        <select
-          className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer"
-          value={month} onChange={e => setMonth(+e.target.value)}
-        >
+        <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={month} onChange={e => setMonth(+e.target.value)}>
           {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
         </select>
-        <select
-          className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer"
-          value={year} onChange={e => setYear(+e.target.value)}
-        >
+        <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={year} onChange={e => setYear(+e.target.value)}>
           {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
         </select>
-        <button
-          className="ml-auto px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
-          onClick={() => setShowRecurring(true)}
-        >
-          Recurring
+        <button className="ml-auto px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm" onClick={() => setShowRecurring(true)}>
+          {t('recurring')}
         </button>
-        <button
-          className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm"
-          onClick={() => setShowCategories(true)}
-        >
-          Categories
+        <button className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm" onClick={() => setShowCategories(true)}>
+          {t('categories')}
         </button>
-        <button
-          className="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer hover:bg-indigo-600 transition-colors"
-          onClick={handleAdd}
-        >
-          + Add
+        <button className="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer hover:bg-indigo-600 transition-colors" onClick={handleAdd}>
+          {t('add')}
         </button>
       </div>
 
       <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 px-4 sm:px-6 pb-4">
-        {/* Summary cards — order 1 mobile, col 1 desktop */}
+        {/* Summary cards */}
         <div className="flex flex-col gap-3 order-1 sm:flex-1">
-          {[
-            { name: 'Income', value: summary.income, color: '#22c55e' },
-            { name: 'Expenses', value: summary.expenses, color: '#f87171' },
-            { name: 'Balance', value: summary.balance, color: '#6366f1' },
-          ].map(d => (
+          {summaryCards.map(d => (
             <div
-              key={d.name}
-              className={`bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] transition-all ${d.name !== 'Balance' ? 'cursor-pointer hover:border-[#444]' : ''}`}
-              style={filterType === d.name.toLowerCase() ? { outline: `2px solid ${d.color}` } : {}}
-              onClick={() => d.name !== 'Balance' && setFilterType(f => f === d.name.toLowerCase() ? '' : d.name.toLowerCase())}
+              key={d.key}
+              className={`bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a] transition-all ${d.key !== 'balance' ? 'cursor-pointer hover:border-[#444]' : ''}`}
+              style={filterType === d.key ? { outline: `2px solid ${d.color}` } : {}}
+              onClick={() => d.key !== 'balance' && setFilterType(f => f === d.key ? '' : d.key)}
             >
-              <span className="block text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: d.color }}>{d.name}</span>
+              <span className="block text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: d.color }}>{d.label}</span>
               <span className="text-2xl font-bold">{d.value < 0 ? '-' : ''}€{fmt(Math.abs(d.value))}</span>
             </div>
           ))}
         </div>
 
-        {/* Projected cards — order 3 mobile, col 2 desktop */}
+        {/* Projected cards */}
         {projections && (
           <div className="flex flex-col gap-3 order-3 sm:order-2 sm:flex-1">
-            <p className="text-xs font-semibold uppercase tracking-wide text-[#555] -mb-1">Projected</p>
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#555] -mb-1">{t('projected')}</p>
             {[
-              { name: 'Month end', data: projections.month },
-              { name: 'Year end',  data: projections.year  },
+              { key: 'month', label: t('monthEnd'), data: projections.month },
+              { key: 'year',  label: t('yearEnd'),  data: projections.year  },
             ].map(d => (
-              <div key={d.name} className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
-                <span className="block text-xs font-semibold uppercase tracking-wide mb-2 text-[#555]">{d.name}</span>
+              <div key={d.key} className="bg-[#1a1a1a] rounded-xl p-4 border border-[#2a2a2a]">
+                <span className="block text-xs font-semibold uppercase tracking-wide mb-2 text-[#555]">{d.label}</span>
                 <div className="flex justify-between text-xs text-[#888] mb-1">
-                  <span>Income</span><span className="text-green-400">+€{fmt(d.data.income)}</span>
+                  <span>{t('income')}</span><span className="text-green-400">+€{fmt(d.data.income)}</span>
                 </div>
                 <div className="flex justify-between text-xs text-[#888] mb-2">
-                  <span>Expenses</span><span className="text-red-400">-€{fmt(d.data.expenses)}</span>
+                  <span>{t('expenses')}</span><span className="text-red-400">-€{fmt(d.data.expenses)}</span>
                 </div>
                 <div className="flex justify-between text-sm font-bold border-t border-[#2a2a2a] pt-2">
-                  <span className="text-[#aaa]">Balance</span>
+                  <span className="text-[#aaa]">{t('balance')}</span>
                   <span style={{ color: d.data.balance >= 0 ? '#22c55e' : '#f87171' }}>
                     {d.data.balance < 0 ? '-' : '+'}€{fmt(Math.abs(d.data.balance))}
                   </span>
@@ -161,7 +162,7 @@ export default function Dashboard({ onLogout, onAdmin }) {
           </div>
         )}
 
-        {/* Donut chart — order 4 mobile, col 3 desktop */}
+        {/* Donut chart */}
         {chartData.length > 0 ? (
           <div className="order-4 sm:order-3 sm:flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex flex-col items-center justify-center py-2">
             <ResponsiveContainer width="100%" height={180}>
@@ -174,38 +175,62 @@ export default function Dashboard({ onLogout, onAdmin }) {
                 <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12, color: '#aaa' }} />
               </PieChart>
             </ResponsiveContainer>
-            <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-2">Expenses by category</p>
+            <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-2">{t('expensesByCategory')}</p>
           </div>
         ) : (
           <div className="order-4 sm:order-3 sm:flex-1 bg-[#1a1a1a] rounded-xl border border-[#2a2a2a] flex items-center justify-center min-h-[100px]">
-            <p className="text-xs text-[#444] uppercase tracking-wide font-semibold">No expenses yet</p>
+            <p className="text-xs text-[#444] uppercase tracking-wide font-semibold">{t('noExpenses')}</p>
           </div>
         )}
-        {/* Transaction list — order 2 mobile, full width row on desktop */}
+
+        {/* Transaction list */}
         <div className="order-2 sm:order-4 sm:w-full flex flex-col gap-2 pb-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-[#555]">Transactions</p>
-        {filtered.length === 0 && <p className="text-[#555] text-center mt-8">No transactions this month.</p>}
-        {filtered.map(tx => (
-          <div key={tx.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-4 py-3 border border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors gap-2">
-            <div className="flex items-center gap-3 min-w-0">
-              <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tx.category?.color ?? '#555' }} />
-              <div className="min-w-0">
-                <div className="text-sm font-medium truncate">{tx.description}</div>
-                <div className="text-xs text-[#666] mt-0.5 truncate">
-                  {tx.category?.name ?? 'Uncategorized'} · {new Date(tx.date).toLocaleDateString()}
-                  {tx.parentTransactionId && <span className="ml-1 text-indigo-400">↺</span>}
+          <div className="flex items-center gap-3 mb-1">
+            <p className="text-xs font-semibold uppercase tracking-wide text-[#555]">{t('transactions')}</p>
+            <input
+              className="ml-auto px-3 py-1.5 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm outline-none focus:border-indigo-500 w-48"
+              placeholder={t('search') ?? 'Search...'}
+              value={searchInput}
+              onChange={e => setSearchInput(e.target.value)}
+            />
+          </div>
+          {transactions.length === 0 && <p className="text-[#555] text-center mt-8">{t('noTransactions')}</p>}
+          {transactions.map(tx => (
+            <div key={tx.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-4 py-3 border border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors gap-2">
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tx.category?.color ?? '#555' }} />
+                <div className="min-w-0">
+                  <div className="text-sm font-medium truncate">{tx.description}</div>
+                  <div className="text-xs text-[#666] mt-0.5 truncate">
+                    {tx.category?.name ?? t('uncategorized')} · {new Date(tx.date).toLocaleDateString()}
+                    {tx.parentTransactionId && <span className="ml-1 text-indigo-400">↺</span>}
+                  </div>
                 </div>
               </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="font-bold text-sm mr-1" style={{ color: tx.type === 'income' ? '#22c55e' : '#f87171' }}>
+                  {tx.type === 'income' ? '+' : '-'}€{fmt(tx.amount)}
+                </span>
+                <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleEdit(tx)}>✏️</button>
+                <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleDelete(tx.id)}>🗑️</button>
+              </div>
             </div>
-            <div className="flex items-center gap-1 shrink-0">
-              <span className="font-bold text-sm mr-1" style={{ color: tx.type === 'income' ? '#22c55e' : '#f87171' }}>
-                {tx.type === 'income' ? '+' : '-'}€{fmt(tx.amount)}
-              </span>
-              <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleEdit(tx)}>✏️</button>
-              <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleDelete(tx.id)}>🗑️</button>
+          ))}
+          {totalPages > 1 && (
+            <div className="flex items-center justify-center gap-3 pt-2">
+              <button
+                className="px-3 py-1.5 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer text-sm hover:border-[#555] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => { const p = page - 1; setPage(p); load(p); }}
+                disabled={page === 1}
+              >←</button>
+              <span className="text-xs text-[#555]">{page} / {totalPages}</span>
+              <button
+                className="px-3 py-1.5 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer text-sm hover:border-[#555] hover:text-white transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                onClick={() => { const p = page + 1; setPage(p); load(p); }}
+                disabled={page === totalPages}
+              >→</button>
             </div>
-          </div>
-        ))}
+          )}
         </div>
       </div>
 
@@ -225,8 +250,6 @@ export default function Dashboard({ onLogout, onAdmin }) {
           onSave={load}
         />
       )}
-
-      {showChangePassword && <ChangePassword onClose={() => setShowChangePassword(false)} />}
 
       {showRecurring && (
         <RecurringManager

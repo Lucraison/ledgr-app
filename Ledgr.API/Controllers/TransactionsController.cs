@@ -15,7 +15,7 @@ public class TransactionsController(AppDbContext db) : ControllerBase
     int UserId => int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
     [HttpGet]
-    public async Task<IActionResult> GetAll([FromQuery] int? year, [FromQuery] int? month, [FromQuery] int? categoryId)
+    public async Task<IActionResult> GetAll([FromQuery] int? year, [FromQuery] int? month, [FromQuery] int? categoryId, [FromQuery] string? search, [FromQuery] string? type, [FromQuery] int page = 1, [FromQuery] int pageSize = 20)
     {
         var query = db.Transactions
             .Include(t => t.Category)
@@ -24,9 +24,12 @@ public class TransactionsController(AppDbContext db) : ControllerBase
         if (year.HasValue) query = query.Where(t => t.Date.Year == year.Value);
         if (month.HasValue) query = query.Where(t => t.Date.Month == month.Value);
         if (categoryId.HasValue) query = query.Where(t => t.CategoryId == categoryId.Value);
+        if (!string.IsNullOrWhiteSpace(search)) query = query.Where(t => t.Description.ToLower().Contains(search.ToLower()));
+        if (!string.IsNullOrWhiteSpace(type)) query = query.Where(t => t.Type == type);
 
-        var results = await query.OrderByDescending(t => t.Date).ToListAsync();
-        return Ok(results);
+        var total = await query.CountAsync();
+        var items = await query.OrderByDescending(t => t.Date).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return Ok(new { items, total, page, pageSize });
     }
 
     [HttpGet("summary")]
