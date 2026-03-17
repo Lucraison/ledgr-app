@@ -131,7 +131,7 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
         </div>
       </header>
 
-      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 px-4 sm:px-6 pb-4">
+      <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 px-4 sm:px-6 pt-4 pb-4">
         {/* Summary cards */}
         <div className="flex flex-col gap-3 order-1 sm:flex-1">
           {summaryCards.map(d => (
