@@ -61,7 +61,7 @@ export default function ProfilePage({ onBack, onLogout, onAdmin }) {
 
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
           <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-4">Accent color</p>
-          <div className="flex gap-4 flex-wrap justify-center">
+          <div className="flex gap-4 flex-wrap justify-center w-full">
             {THEME_COLORS.map(c => (
               <button
                 key={c.value}
