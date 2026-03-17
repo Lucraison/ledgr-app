@@ -23,10 +23,10 @@ export default function BottomNav({ page, onNavigate, onAdd, isAdmin }) {
       <div className="flex-1 flex items-center justify-center">
         <button
           onClick={onAdd}
-          className="flex items-center justify-center w-14 h-14 rounded-full text-white shadow-lg cursor-pointer border-none transition-transform active:scale-95 -mt-6"
+          className="flex items-center justify-center w-12 h-12 rounded-full text-white shadow-lg cursor-pointer border-none transition-transform active:scale-95 -mt-4"
           style={{ background: 'var(--accent)' }}
         >
-          <Plus size={26} strokeWidth={2.5} />
+          <Plus size={22} strokeWidth={2.5} />
         </button>
       </div>
 
