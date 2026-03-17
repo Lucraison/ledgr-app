@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { parseToken } from '../api';
 import ChangePassword from '../components/ChangePassword';
 import { THEME_COLORS, applyTheme } from '../theme';
+import { ArrowLeft } from 'lucide-react';
 
 export default function ProfilePage({ onBack, onLogout, onAdmin }) {
   const { t, i18n } = useTranslation();
@@ -19,6 +20,9 @@ export default function ProfilePage({ onBack, onLogout, onAdmin }) {
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
       <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-3">
+          <button onClick={onBack} className="hidden md:flex items-center justify-center p-1.5 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors">
+            <ArrowLeft size={16} />
+          </button>
           <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
           <span className="text-xs text-[#555] uppercase tracking-wide">Profile</span>
         </div>
