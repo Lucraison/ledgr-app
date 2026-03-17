@@ -29,8 +29,8 @@ export default function App() {
   const { isAdmin } = parseToken();
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] pb-32">
-      {page === 'dashboard' && <Dashboard onLogout={handleLogout} showAdd={showAdd} onShowAddHandled={() => setShowAdd(false)} />}
+    <div className="min-h-screen bg-[#0f0f0f] pb-32 md:pb-0">
+      {page === 'dashboard' && <Dashboard onLogout={handleLogout} showAdd={showAdd} onShowAddHandled={() => setShowAdd(false)} onNavigate={setPage} isAdmin={isAdmin} />}
       {page === 'admin' && <AdminPage onBack={() => setPage('dashboard')} onLogout={handleLogout} />}
       {page === 'profile' && <ProfilePage onBack={() => setPage('dashboard')} onLogout={handleLogout} onAdmin={() => setPage('admin')} />}
       <BottomNav page={page} onNavigate={setPage} onAdd={() => setShowAdd(true)} isAdmin={isAdmin} />

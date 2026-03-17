@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Tag, Repeat, Copy, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import { Tag, Repeat, Copy, MoreVertical, Pencil, Trash2, Plus, User, ShieldCheck } from 'lucide-react';
 import Picker from '../components/Picker';
 import { useTranslation } from 'react-i18next';
 import { getTransactions, getSummary, deleteTransaction, getCategories, parseToken, getProjections } from '../api';
@@ -12,7 +12,7 @@ import ConfirmModal from '../components/ConfirmModal';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmt = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function Dashboard({ showAdd, onShowAddHandled }) {
+export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdmin }) {
   const { t, i18n } = useTranslation();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
@@ -111,6 +111,20 @@ export default function Dashboard({ showAdd, onShowAddHandled }) {
             options={[2023, 2024, 2025, 2026].map(y => ({ value: y, label: String(y) }))}
             onChange={setYear}
           />
+          {/* Desktop-only nav */}
+          <div className="hidden md:flex items-center gap-2 ml-2 pl-2 border-l border-[#2a2a2a]">
+            <button onClick={handleAdd} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium text-white cursor-pointer border-none transition-colors" style={{ background: 'var(--accent)' }}>
+              <Plus size={15} strokeWidth={2.5} /> Add
+            </button>
+            {isAdmin && (
+              <button onClick={() => onNavigate('admin')} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title="Admin">
+                <ShieldCheck size={16} />
+              </button>
+            )}
+            <button onClick={() => onNavigate('profile')} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title="Profile">
+              <User size={16} />
+            </button>
+          </div>
         </div>
       </header>
 

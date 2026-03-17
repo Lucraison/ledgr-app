@@ -13,7 +13,7 @@ const NavBtn = ({ onClick, active, icon, label }) => (
 export default function BottomNav({ page, onNavigate, onAdd, isAdmin }) {
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 border-t border-[#1e1e1e] flex items-center z-40"
+      className="md:hidden fixed bottom-0 left-0 right-0 border-t border-[#1e1e1e] flex items-center z-40"
       style={{ background: '#111', paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '60px' }}
     >
       <NavBtn onClick={() => onNavigate('dashboard')} active={page === 'dashboard'} label="Home"
