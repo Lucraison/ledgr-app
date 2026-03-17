@@ -43,27 +43,7 @@ export default function CategoryManager({ categories, onClose, onSave }) {
           <button className="bg-transparent border-none text-[#555] cursor-pointer hover:text-white text-2xl leading-none p-1" onClick={onClose}>×</button>
         </div>
 
-        <div className="overflow-y-auto flex-1 px-5 py-3">
-          {categories.length === 0 && <p className="text-[#555] text-sm text-center py-4">{t('noCategories')}</p>}
-          {categories.map(cat => (
-            <div key={cat.id} className={`flex items-center justify-between rounded-lg px-3 py-3 border mb-2 transition-colors ${editing?.id === cat.id ? 'bg-indigo-500/10 border-indigo-500/40' : 'bg-[#111] border-[#2a2a2a]'}`}>
-              <div className="flex items-center gap-3 min-w-0">
-                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: cat.color }} />
-                <span className="text-sm text-white truncate">{cat.name}</span>
-              </div>
-              <div className="flex gap-1 shrink-0 ml-3">
-                <button className="px-3 py-1.5 rounded-md text-xs text-[#aaa] bg-transparent border border-[#333] cursor-pointer hover:border-[#555] hover:text-white transition-colors" onClick={() => editing?.id === cat.id ? reset() : startEdit(cat)}>
-                  {editing?.id === cat.id ? t('cancel') : t('edit')}
-                </button>
-                <button className="px-3 py-1.5 rounded-md text-xs text-red-400 bg-transparent border border-red-900 cursor-pointer hover:bg-red-900/20 transition-colors" onClick={() => handleDelete(cat.id)}>
-                  {t('delete')}
-                </button>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="px-5 py-4 border-t border-[#2a2a2a] shrink-0">
+        <div className="px-5 py-4 border-b border-[#2a2a2a] shrink-0">
           <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-3">
             {editing ? `${t('editCategory')}: ${editing.name}` : t('newCategory')}
           </p>
@@ -82,6 +62,26 @@ export default function CategoryManager({ categories, onClose, onSave }) {
               </button>
             </div>
           </form>
+        </div>
+
+        <div className="overflow-y-auto flex-1 px-5 py-3">
+          {categories.length === 0 && <p className="text-[#555] text-sm text-center py-4">{t('noCategories')}</p>}
+          {categories.map(cat => (
+            <div key={cat.id} className={`flex items-center justify-between rounded-lg px-3 py-3 border mb-2 transition-colors ${editing?.id === cat.id ? 'bg-indigo-500/10 border-indigo-500/40' : 'bg-[#111] border-[#2a2a2a]'}`}>
+              <div className="flex items-center gap-3 min-w-0">
+                <span className="w-3 h-3 rounded-full shrink-0" style={{ background: cat.color }} />
+                <span className="text-sm text-white truncate">{cat.name}</span>
+              </div>
+              <div className="flex gap-1 shrink-0 ml-3">
+                <button className="px-3 py-1.5 rounded-md text-xs text-[#aaa] bg-transparent border border-[#333] cursor-pointer hover:border-[#555] hover:text-white transition-colors" onClick={() => editing?.id === cat.id ? reset() : startEdit(cat)}>
+                  {editing?.id === cat.id ? t('cancel') : t('edit')}
+                </button>
+                <button className="px-3 py-1.5 rounded-md text-xs text-red-400 bg-transparent border border-red-900 cursor-pointer hover:bg-red-900/20 transition-colors" onClick={() => handleDelete(cat.id)}>
+                  {t('delete')}
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
       {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}

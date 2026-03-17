@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Tag, Repeat, Copy, MoreVertical, Pencil, Trash2 } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { getTransactions, getSummary, deleteTransaction, getCategories, parseToken, getProjections } from '../api';
 import TransactionForm from '../components/TransactionForm';
@@ -10,9 +11,8 @@ import ConfirmModal from '../components/ConfirmModal';
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmt = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-export default function Dashboard({ onLogout, onAdmin, onProfile }) {
+export default function Dashboard({ showAdd, onShowAddHandled }) {
   const { t, i18n } = useTranslation();
-  const { isAdmin } = parseToken();
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());
   const [month, setMonth] = useState(now.getMonth() + 1);
@@ -24,6 +24,7 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
   const [showCategories, setShowCategories] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
   const [confirm, setConfirm] = useState(null);
+  const [openMenu, setOpenMenu] = useState(null);
   const [projections, setProjections] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -56,7 +57,13 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
   useEffect(() => { setPage(1); load(1); }, [year, month]);
   useEffect(() => { setPage(1); load(1); }, [search, filterType]);
 
+  useEffect(() => { if (showAdd) { setEditing(null); setShowForm(true); onShowAddHandled(); } }, [showAdd]);
+
   function handleEdit(tx) { setEditing(tx); setShowForm(true); }
+  function handleCopy(tx) {
+    setEditing({ amount: tx.amount, type: tx.type, description: tx.description, categoryId: tx.categoryId, notes: tx.notes, isRecurring: false });
+    setShowForm(true);
+  }
   function handleAdd() { setEditing(null); setShowForm(true); }
   function handleDelete(id) {
     setConfirm({ message: t('deleteTransaction'), onConfirm: async () => { setConfirm(null); await deleteTransaction(id); load(); } });
@@ -83,41 +90,24 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
   ];
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
+    <div className="min-h-screen bg-[#0f0f0f] text-white font-sans" onClick={() => setOpenMenu(null)}>
       <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
-        <span className="text-xl font-bold text-indigo-500">Ledgr</span>
-        <div className="flex gap-2">
-          {isAdmin === 'True' && (
-            <button onClick={onAdmin} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-indigo-500 hover:text-indigo-400 transition-colors">
-              {t('admin')}
-            </button>
-          )}
-          <button onClick={onProfile} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            Profile
+        <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
+        <div className="flex items-center gap-2">
+          <button onClick={() => setShowRecurring(true)} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title={t('recurring')}>
+            <Repeat size={16} />
           </button>
-          <button onClick={onLogout} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            {t('logout')}
+          <button onClick={() => setShowCategories(true)} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title={t('categories')}>
+            <Tag size={16} />
           </button>
+          <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={month} onChange={e => setMonth(+e.target.value)}>
+            {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
+          </select>
+          <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={year} onChange={e => setYear(+e.target.value)}>
+            {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
         </div>
       </header>
-
-      <div className="flex flex-wrap gap-3 px-4 sm:px-6 py-4 items-center">
-        <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={month} onChange={e => setMonth(+e.target.value)}>
-          {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-        </select>
-        <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={year} onChange={e => setYear(+e.target.value)}>
-          {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-        </select>
-        <button className="ml-auto px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm" onClick={() => setShowRecurring(true)}>
-          {t('recurring')}
-        </button>
-        <button className="px-4 py-2 rounded-lg border border-[#333] text-[#aaa] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors text-sm" onClick={() => setShowCategories(true)}>
-          {t('categories')}
-        </button>
-        <button className="px-4 py-2 rounded-lg bg-indigo-500 text-white font-semibold cursor-pointer hover:bg-indigo-600 transition-colors" onClick={handleAdd}>
-          {t('add')}
-        </button>
-      </div>
 
       <div className="flex flex-col sm:flex-row sm:flex-wrap gap-4 px-4 sm:px-6 pb-4">
         {/* Summary cards */}
@@ -211,8 +201,26 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
                 <span className="font-bold text-sm mr-1" style={{ color: tx.type === 'income' ? '#22c55e' : '#f87171' }}>
                   {tx.type === 'income' ? '+' : '-'}€{fmt(tx.amount)}
                 </span>
-                <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleEdit(tx)}>✏️</button>
-                <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleDelete(tx.id)}>🗑️</button>
+                <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => handleCopy(tx)}>
+                  <Copy size={15} />
+                </button>
+                <div className="relative" onClick={e => e.stopPropagation()}>
+                  <button className="bg-transparent border-none cursor-pointer p-2 text-[#555] hover:text-white transition-colors" onClick={() => setOpenMenu(openMenu === tx.id ? null : tx.id)}>
+                    <MoreVertical size={15} />
+                  </button>
+                  {openMenu === tx.id && (
+                    <div className="absolute right-0 top-8 bg-[#222] border border-[#333] rounded-xl shadow-lg z-10 overflow-hidden min-w-[120px]">
+                      <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-[#aaa] hover:bg-[#2a2a2a] hover:text-white transition-colors cursor-pointer bg-transparent border-none text-left"
+                        onClick={() => { setOpenMenu(null); handleEdit(tx); }}>
+                        <Pencil size={14} /> Edit
+                      </button>
+                      <button className="flex items-center gap-2 w-full px-4 py-2.5 text-sm text-red-400 hover:bg-[#2a2a2a] transition-colors cursor-pointer bg-transparent border-none text-left"
+                        onClick={() => { setOpenMenu(null); handleDelete(tx.id); }}>
+                        <Trash2 size={14} /> Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))}

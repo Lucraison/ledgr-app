@@ -37,16 +37,8 @@ export default function AdminPage({ onBack, onLogout }) {
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
       <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
         <div className="flex items-center gap-3">
-          <span className="text-xl font-bold text-indigo-500">Ledgr</span>
+          <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
           <span className="text-xs text-[#555] uppercase tracking-wide">{t('adminTitle')}</span>
-        </div>
-        <div className="flex gap-2">
-          <button onClick={onBack} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            ← Dashboard
-          </button>
-          <button onClick={onLogout} className="border border-[#333] text-[#aaa] rounded-lg px-3 py-2 cursor-pointer text-sm bg-transparent hover:border-[#555] hover:text-white transition-colors">
-            {t('logout')}
-          </button>
         </div>
       </header>
 

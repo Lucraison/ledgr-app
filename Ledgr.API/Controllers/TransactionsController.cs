@@ -19,7 +19,7 @@ public class TransactionsController(AppDbContext db) : ControllerBase
     {
         var query = db.Transactions
             .Include(t => t.Category)
-            .Where(t => t.UserId == UserId);
+            .Where(t => t.UserId == UserId && !t.IsRecurring);
 
         if (year.HasValue) query = query.Where(t => t.Date.Year == year.Value);
         if (month.HasValue) query = query.Where(t => t.Date.Month == month.Value);
@@ -35,7 +35,7 @@ public class TransactionsController(AppDbContext db) : ControllerBase
     [HttpGet("summary")]
     public async Task<IActionResult> GetSummary([FromQuery] int? year, [FromQuery] int? month)
     {
-        var query = db.Transactions.Where(t => t.UserId == UserId);
+        var query = db.Transactions.Where(t => t.UserId == UserId && !t.IsRecurring);
         if (year.HasValue) query = query.Where(t => t.Date.Year == year.Value);
         if (month.HasValue) query = query.Where(t => t.Date.Month == month.Value);
 
@@ -66,6 +66,27 @@ public class TransactionsController(AppDbContext db) : ControllerBase
         };
         db.Transactions.Add(t);
         await db.SaveChangesAsync();
+
+        if (t.IsRecurring && t.NextOccurrence.HasValue)
+        {
+            var child = new Transaction
+            {
+                Amount = t.Amount, Type = t.Type, Description = t.Description,
+                Date = t.NextOccurrence.Value, Notes = t.Notes, CategoryId = t.CategoryId,
+                UserId = t.UserId, IsRecurring = false, ParentTransactionId = t.Id,
+            };
+            db.Transactions.Add(child);
+            t.NextOccurrence = t.Frequency switch
+            {
+                RecurringFrequency.Daily   => t.NextOccurrence.Value.AddDays(1),
+                RecurringFrequency.Weekly  => t.NextOccurrence.Value.AddDays(7),
+                RecurringFrequency.Monthly => t.NextOccurrence.Value.AddMonths(1),
+                RecurringFrequency.Yearly  => t.NextOccurrence.Value.AddYears(1),
+                _ => t.NextOccurrence
+            };
+            await db.SaveChangesAsync();
+        }
+
         await db.Entry(t).Reference(x => x.Category).LoadAsync();
         return Ok(t);
     }
