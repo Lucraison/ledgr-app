@@ -19,6 +19,7 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
   const [month, setMonth] = useState(now.getMonth() + 1);
   const [transactions, setTransactions] = useState([]);
   const [summary, setSummary] = useState({ income: 0, expenses: 0, balance: 0 });
+  const [ytdBalance, setYtdBalance] = useState(0);
   const [categories, setCategories] = useState([]);
   const [editing, setEditing] = useState(null);
   const [showForm, setShowForm] = useState(false);
@@ -40,9 +41,10 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
   }, [searchInput]);
 
   async function load(p = page) {
-    const [txRes, sum, cats, proj] = await Promise.all([
+    const [txRes, sum, ytd, cats, proj] = await Promise.all([
       getTransactions({ year, month, search: search || undefined, type: filterType || undefined, page: p, pageSize: PAGE_SIZE }),
       getSummary({ year, month }),
+      getSummary({ year }),
       getCategories(),
       getProjections({ year, month }),
     ]);
@@ -51,6 +53,7 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
     setTransactions(items);
     setTotal(totalCount);
     setSummary(sum);
+    setYtdBalance(ytd.balance);
     setCategories(cats);
     setProjections(proj);
   }
@@ -86,8 +89,8 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
 
   const summaryCards = [
     { key: 'income',   label: t('income'),   value: summary.income,   color: '#22c55e' },
-    { key: 'expenses', label: t('expenses'),  value: summary.expenses, color: '#f87171' },
-    { key: 'balance',  label: t('balance'),   value: summary.balance,  color: '#6366f1' },
+    { key: 'expense',  label: t('expenses'),  value: summary.expenses, color: '#f87171' },
+    { key: 'balance',  label: t('balance'),   value: ytdBalance,       color: '#6366f1' },
   ];
 
   return (
@@ -140,6 +143,7 @@ export default function Dashboard({ showAdd, onShowAddHandled, onNavigate, isAdm
             >
               <span className="block text-xs font-semibold uppercase tracking-wide mb-1" style={{ color: d.color }}>{d.label}</span>
               <span className="text-2xl font-bold">{d.value < 0 ? '-' : ''}€{fmt(Math.abs(d.value))}</span>
+              {d.key === 'balance' && <span className="text-[10px] text-[#444] mt-0.5 block">year to date</span>}
             </div>
           ))}
         </div>
