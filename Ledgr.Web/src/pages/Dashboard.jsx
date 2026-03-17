@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Tag, Repeat, Copy, MoreVertical, Pencil, Trash2 } from 'lucide-react';
+import Picker from '../components/Picker';
 import { useTranslation } from 'react-i18next';
 import { getTransactions, getSummary, deleteTransaction, getCategories, parseToken, getProjections } from '../api';
 import TransactionForm from '../components/TransactionForm';
@@ -91,7 +92,7 @@ export default function Dashboard({ showAdd, onShowAddHandled }) {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans" onClick={() => setOpenMenu(null)}>
-      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
         <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
         <div className="flex items-center gap-2">
           <button onClick={() => setShowRecurring(true)} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title={t('recurring')}>
@@ -100,12 +101,16 @@ export default function Dashboard({ showAdd, onShowAddHandled }) {
           <button onClick={() => setShowCategories(true)} className="p-2 rounded-lg border border-[#333] text-[#555] bg-transparent cursor-pointer hover:border-[#555] hover:text-white transition-colors" title={t('categories')}>
             <Tag size={16} />
           </button>
-          <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={month} onChange={e => setMonth(+e.target.value)}>
-            {MONTHS.map((m, i) => <option key={i} value={i + 1}>{m}</option>)}
-          </select>
-          <select className="px-3 py-2 rounded-lg border border-[#333] bg-[#1a1a1a] text-white text-sm cursor-pointer" value={year} onChange={e => setYear(+e.target.value)}>
-            {[2023, 2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
+          <Picker
+            value={month}
+            options={MONTHS.map((m, i) => ({ value: i + 1, label: m }))}
+            onChange={setMonth}
+          />
+          <Picker
+            value={year}
+            options={[2023, 2024, 2025, 2026].map(y => ({ value: y, label: String(y) }))}
+            onChange={setYear}
+          />
         </div>
       </header>
 
@@ -185,7 +190,18 @@ export default function Dashboard({ showAdd, onShowAddHandled }) {
             />
           </div>
           {transactions.length === 0 && <p className="text-[#555] text-center mt-8">{t('noTransactions')}</p>}
-          {transactions.map(tx => (
+          {Object.entries(
+            transactions.reduce((acc, tx) => {
+              const day = new Date(tx.date).getDate();
+              const week = day <= 7 ? 'Week 1' : day <= 14 ? 'Week 2' : day <= 21 ? 'Week 3' : 'Week 4';
+              if (!acc[week]) acc[week] = [];
+              acc[week].push(tx);
+              return acc;
+            }, {})
+          ).map(([week, txs]) => (
+            <div key={week}>
+              <p className="text-xs font-semibold uppercase tracking-wide text-[#444] mt-3 mb-1.5 px-1">{week}</p>
+              {txs.map(tx => (
             <div key={tx.id} className="flex items-center justify-between bg-[#1a1a1a] rounded-xl px-4 py-3 border border-[#2a2a2a] hover:border-[#3a3a3a] transition-colors gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: tx.category?.color ?? '#555' }} />
@@ -222,6 +238,8 @@ export default function Dashboard({ showAdd, onShowAddHandled }) {
                   )}
                 </div>
               </div>
+            </div>
+          ))}
             </div>
           ))}
           {totalPages > 1 && (

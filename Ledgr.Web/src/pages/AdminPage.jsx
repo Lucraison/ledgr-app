@@ -35,7 +35,7 @@ export default function AdminPage({ onBack, onLogout }) {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-3">
           <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
           <span className="text-xs text-[#555] uppercase tracking-wide">{t('adminTitle')}</span>

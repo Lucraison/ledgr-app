@@ -79,6 +79,16 @@ export default function Login({ onLogin }) {
         >
           {isRegister ? t('haveAccount') : t('noAccount')}
         </button>
+        <div className="mt-6 pt-6 border-t border-[#2a2a2a] flex items-center justify-between">
+          <span className="text-xs text-[#555]">Android app available</span>
+          <a
+            href="/ledgr.apk"
+            download
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#333] text-[#aaa] text-xs hover:border-[#555] hover:text-white transition-colors no-underline"
+          >
+            ↓ Download APK
+          </a>
+        </div>
       </div>
     </div>
   );

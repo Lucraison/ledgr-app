@@ -17,7 +17,7 @@ export default function ProfilePage({ onBack, onLogout, onAdmin }) {
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-white font-sans">
-      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]">
+      <header className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-[#1e1e1e]" style={{ paddingTop: 'max(16px, env(safe-area-inset-top))' }}>
         <div className="flex items-center gap-3">
           <span className="text-xl font-bold" style={{ color: 'var(--accent)' }}>Ledgr</span>
           <span className="text-xs text-[#555] uppercase tracking-wide">Profile</span>
@@ -61,7 +61,7 @@ export default function ProfilePage({ onBack, onLogout, onAdmin }) {
 
         <div className="bg-[#1a1a1a] border border-[#2a2a2a] rounded-xl p-6">
           <p className="text-xs text-[#555] uppercase tracking-wide font-semibold mb-4">Accent color</p>
-          <div className="flex gap-3 flex-wrap">
+          <div className="flex gap-4 flex-wrap justify-center">
             {THEME_COLORS.map(c => (
               <button
                 key={c.value}
