@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { createCategory, updateCategory, deleteCategory } from '../api';
+import ConfirmModal from './ConfirmModal';
 
 export default function CategoryManager({ categories, onClose, onSave }) {
   const { t } = useTranslation();
@@ -9,6 +10,7 @@ export default function CategoryManager({ categories, onClose, onSave }) {
   const [editing, setEditing] = useState(null);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [confirm, setConfirm] = useState(null);
 
   function startEdit(cat) { setEditing(cat); setName(cat.name); setColor(cat.color); setError(''); }
   function reset() { setEditing(null); setName(''); setColor('#6366f1'); setError(''); }
@@ -29,10 +31,8 @@ export default function CategoryManager({ categories, onClose, onSave }) {
     }
   }
 
-  async function handleDelete(id) {
-    if (!confirm(t('deleteCategory'))) return;
-    await deleteCategory(id);
-    onSave();
+  function handleDelete(id) {
+    setConfirm({ message: t('deleteCategory'), onConfirm: async () => { setConfirm(null); await deleteCategory(id); onSave(); } });
   }
 
   return (
@@ -84,6 +84,7 @@ export default function CategoryManager({ categories, onClose, onSave }) {
           </form>
         </div>
       </div>
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
     </div>
   );
 }

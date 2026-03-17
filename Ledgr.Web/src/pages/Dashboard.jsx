@@ -5,6 +5,7 @@ import TransactionForm from '../components/TransactionForm';
 import CategoryManager from '../components/CategoryManager';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend, Label } from 'recharts';
 import RecurringManager from '../components/RecurringManager';
+import ConfirmModal from '../components/ConfirmModal';
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const fmt = (n) => n.toLocaleString('nl-NL', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -22,6 +23,7 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
   const [showForm, setShowForm] = useState(false);
   const [showCategories, setShowCategories] = useState(false);
   const [showRecurring, setShowRecurring] = useState(false);
+  const [confirm, setConfirm] = useState(null);
   const [projections, setProjections] = useState(null);
   const [filterType, setFilterType] = useState('');
   const [searchInput, setSearchInput] = useState('');
@@ -56,10 +58,8 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
 
   function handleEdit(tx) { setEditing(tx); setShowForm(true); }
   function handleAdd() { setEditing(null); setShowForm(true); }
-  async function handleDelete(id) {
-    if (!confirm(t('deleteTransaction'))) return;
-    await deleteTransaction(id);
-    load();
+  function handleDelete(id) {
+    setConfirm({ message: t('deleteTransaction'), onConfirm: async () => { setConfirm(null); await deleteTransaction(id); load(); } });
   }
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
@@ -257,6 +257,8 @@ export default function Dashboard({ onLogout, onAdmin, onProfile }) {
           onEdit={tx => { setEditing(tx); setShowForm(true); }}
         />
       )}
+
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
     </div>
   );
 }

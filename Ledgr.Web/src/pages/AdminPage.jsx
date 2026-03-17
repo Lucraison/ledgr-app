@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getUsers, deleteUser, resetPassword } from '../api';
+import ConfirmModal from '../components/ConfirmModal';
 
 export default function AdminPage({ onBack, onLogout }) {
   const { t } = useTranslation();
@@ -10,14 +11,13 @@ export default function AdminPage({ onBack, onLogout }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [search, setSearch] = useState('');
+  const [confirm, setConfirm] = useState(null);
 
   async function load() { setUsers(await getUsers()); }
   useEffect(() => { load(); }, []);
 
-  async function handleDelete(id) {
-    if (!confirm(t('deleteUser'))) return;
-    await deleteUser(id);
-    load();
+  function handleDelete(id) {
+    setConfirm({ message: t('deleteUser'), onConfirm: async () => { setConfirm(null); await deleteUser(id); load(); } });
   }
 
   async function handleReset(e) {
@@ -103,6 +103,7 @@ export default function AdminPage({ onBack, onLogout }) {
           </div>
         </div>
       </div>
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
     </div>
   );
 }

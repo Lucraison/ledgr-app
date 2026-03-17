@@ -1,26 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { getTemplates, stopRecurrence, deleteTransaction } from '../api';
+import ConfirmModal from './ConfirmModal';
 
 const FREQUENCY_KEYS = ['daily', 'weekly', 'monthly', 'yearly'];
 
 export default function RecurringManager({ onClose, onEdit }) {
   const { t } = useTranslation();
   const [templates, setTemplates] = useState([]);
+  const [confirm, setConfirm] = useState(null);
 
   async function load() { setTemplates(await getTemplates()); }
   useEffect(() => { load(); }, []);
 
-  async function handleStop(id) {
-    if (!confirm(t('stopRecurring'))) return;
-    await stopRecurrence(id);
-    load();
+  function handleStop(id) {
+    setConfirm({ message: t('stopRecurring'), onConfirm: async () => { setConfirm(null); await stopRecurrence(id); load(); } });
   }
 
-  async function handleDelete(id) {
-    if (!confirm(t('deleteRecurring'))) return;
-    await deleteTransaction(id);
-    load();
+  function handleDelete(id) {
+    setConfirm({ message: t('deleteRecurring'), onConfirm: async () => { setConfirm(null); await deleteTransaction(id); load(); } });
   }
 
   return (
@@ -65,6 +63,7 @@ export default function RecurringManager({ onClose, onEdit }) {
           ))}
         </div>
       </div>
+      {confirm && <ConfirmModal message={confirm.message} onConfirm={confirm.onConfirm} onCancel={() => setConfirm(null)} />}
     </div>
   );
 }
