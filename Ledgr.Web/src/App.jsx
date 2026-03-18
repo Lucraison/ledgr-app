@@ -26,7 +26,8 @@ export default function App() {
 
   if (!token) return <Login onLogin={handleLogin} />;
 
-  const { isAdmin } = parseToken();
+  const claims = parseToken();
+  const isAdmin = claims.isAdmin === true || claims.isAdmin === 'True';
 
   return (
     <div className="min-h-screen bg-[#0f0f0f] pb-32 md:pb-0">
